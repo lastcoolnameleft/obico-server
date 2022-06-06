@@ -2,12 +2,8 @@ version: '2.4'
 
 x-web-defaults: &web-defaults
   restart: unless-stopped
-  build:
-    context: backend
-    dockerfile: "Dockerfile${DOCKERFILE_VERSION-}"
   volumes:
-    - ./backend:/app
-    - ./frontend:/frontend
+    - ./web/db:/db
   depends_on:
     - redis
   environment:
@@ -22,7 +18,7 @@ x-web-defaults: &web-defaults
     SITE_IS_PUBLIC: '${SITE_IS_PUBLIC-False}'
     SOCIAL_LOGIN: '${SOCIAL_LOGIN-False}'
     REDIS_URL: '${REDIS_URL-redis://redis:6379}'
-    DATABASE_URL: '${DATABASE_URL-sqlite:////app/db.sqlite3}'
+    DATABASE_URL: '${DATABASE_URL-sqlite:////db/db.sqlite3}'
     INTERNAL_MEDIA_HOST: '${INTERNAL_MEDIA_HOST-http://web:3334}'
     ML_API_HOST: '${ML_API_HOST-http://ml_api:3333}'
     ACCOUNT_ALLOW_SIGN_UP: '${ACCOUNT_ALLOW_SIGN_UP-False}'
@@ -53,18 +49,24 @@ services:
 
   web:
     <<: *web-defaults
+    build:
+      context: web
+      dockerfile: "Dockerfile.web"
     hostname: web
     ports:
       - "3334:3334"
       - "${OCTOPRINT_TUNNEL_PORT_RANGE-15853-15873}:3334"
     depends_on:
       - ml_api
-    command: sh -c 'python manage.py migrate && python manage.py collectstatic -v 2 --noinput && python manage.py runserver --nostatic --noreload 0.0.0.0:3334'
 
   tasks:
     <<: *web-defaults
+    build:
+      context: web
+      dockerfile: "Dockerfile.tasks"
+    depends_on:
+      - web
     hostname: tasks
-    command: sh -c "celery -A config worker --beat -l info -c 2 -Q realtime,celery"
 
   redis:
     restart: unless-stopped
