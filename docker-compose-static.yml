@@ -1,0 +1,62 @@
+version: '2.4'
+
+x-web-defaults: &web-defaults
+  restart: unless-stopped
+  volumes:
+    - ./web/db:/db
+  environment:
+    EMAIL_HOST: '${EMAIL_HOST-}'
+    EMAIL_HOST_USER: '${EMAIL_HOST_USER-}'
+    EMAIL_HOST_PASSWORD: '${EMAIL_HOST_PASSWORD-}'
+    EMAIL_PORT: '${EMAIL_PORT-587}'
+    EMAIL_USE_TLS: '${EMAIL_USE_TLS-True}'
+    DEFAULT_FROM_EMAIL: '${DEFAULT_FROM_EMAIL-changeme@example.com}'
+    DEBUG: '${DEBUG-False}'    # Don't set DEBUG to True unless you know what you are doing. Otherwise the static files will be cached in browser until hard-refresh
+    SITE_USES_HTTPS: '${SITE_USES_HTTPS-False}'
+    SITE_IS_PUBLIC: '${SITE_IS_PUBLIC-False}'
+    SOCIAL_LOGIN: '${SOCIAL_LOGIN-False}'
+    REDIS_URL: '${REDIS_URL-rediss://:f0FcNuWdIH0GhPGd1qe0kK07xvSLUUWwiAzCaOIJkvQ=@spaghetti-detective.redis.cache.windows.net:6380?ssl_cert_reqs=none}'
+    DATABASE_URL: '${DATABASE_URL-sqlite:////db/db.sqlite3}'
+    INTERNAL_MEDIA_HOST: '${INTERNAL_MEDIA_HOST-http://web:3334}'
+    ML_API_HOST: '${ML_API_HOST-http://ml_api:3333}'
+    ACCOUNT_ALLOW_SIGN_UP: '${ACCOUNT_ALLOW_SIGN_UP-False}'
+    WEBPACK_LOADER_ENABLED: '${WEBPACK_LOADER_ENABLED-False}'
+    OCTOPRINT_TUNNEL_PORT_RANGE: '${OCTOPRINT_TUNNEL_PORT_RANGE-15853-15873}'
+    TELEGRAM_BOT_TOKEN: '${TELEGRAM_BOT_TOKEN-}'
+    TWILIO_ACCOUNT_SID: '${TWILIO_ACCOUNT_SID-}'
+    TWILIO_AUTH_TOKEN: '${TWILIO_AUTH_TOKEN-}'
+    TWILIO_FROM_NUMBER: '${TWILIO_FROM_NUMBER-}'
+    SENTRY_DSN: '${SENTRY_DSN-}'
+    PUSHOVER_APP_TOKEN: '${PUSHOVER_APP_TOKEN-}'
+    SLACK_CLIENT_ID: '${SLACK_CLIENT_ID-}'
+    SLACK_CLIENT_SECRET: '${SLACK_CLIENT_SECRET-}'
+    VERSION:
+
+services:
+  ml_api:
+    hostname: ml_api
+    restart: unless-stopped
+    image: spaghettidetective.azurecr.io/obico-ml-api:4
+    environment:
+        DEBUG: 'True'
+        FLASK_APP: 'server.py'
+        #ML_API_TOKEN:
+        #HAS_GPU: 'False'
+
+  web:
+    <<: *web-defaults
+    image: spaghettidetective.azurecr.io/obico-server-web:4
+    hostname: web
+    ports:
+      - "3334:3334"
+      - "${OCTOPRINT_TUNNEL_PORT_RANGE-15853-15873}:3334"
+    depends_on:
+      - ml_api
+
+  tasks:
+    <<: *web-defaults
+    image: spaghettidetective.azurecr.io/obico-server-tasks:4
+    depends_on:
+      - web
+    hostname: tasks
+
