@@ -15,7 +15,7 @@ x-web-defaults: &web-defaults
     SITE_USES_HTTPS: '${SITE_USES_HTTPS-False}'
     SITE_IS_PUBLIC: '${SITE_IS_PUBLIC-False}'
     SOCIAL_LOGIN: '${SOCIAL_LOGIN-False}'
-    REDIS_URL: '${REDIS_URL-rediss://:f0FcNuWdIH0GhPGd1qe0kK07xvSLUUWwiAzCaOIJkvQ=@spaghetti-detective.redis.cache.windows.net:6380?ssl_cert_reqs=none}'
+    REDIS_URL: '${REDIS_URL-rediss://:<REMOVED>@spaghetti-detective.redis.cache.windows.net:6380?ssl_cert_reqs=none}'
     DATABASE_URL: '${DATABASE_URL-sqlite:////db/db.sqlite3}'
     INTERNAL_MEDIA_HOST: '${INTERNAL_MEDIA_HOST-http://web:3334}'
     ML_API_HOST: '${ML_API_HOST-http://ml_api:3333}'
